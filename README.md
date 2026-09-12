@@ -62,7 +62,7 @@ Follow these steps **in order** to get the project running on your machine.
 
 ```bash
 git clone <repository-url>
-cd fact_checker_project
+cd fact_checker_bugs
 ```
 
 > Replace `<repository-url>` with the actual GitHub URL shared with you.
@@ -145,24 +145,26 @@ TAVILY_API_KEY=tvly-your_tavily_key_here
 
 ### Step 5 — Run the fact-checker
 
+This project does not currently expose a `fact-checker` console script in `pyproject.toml`, so the CLI is run directly as a Python module from the project root:
+
 ```bash
-poetry run fact-checker check "Your claim goes here"
+poetry run python -m fact_checker_bugs.cli check "Your claim goes here"
 ```
 
 #### Examples to try
 
 ```bash
 # Science claims
-poetry run fact-checker check "Humans only use 10% of their brain."
+poetry run python -m fact_checker_bugs.cli check "Humans only use 10% of their brain."
 
 # Historical claims
-poetry run fact-checker check "The Great Wall of China is visible from space."
+poetry run python -m fact_checker_bugs.cli check "The Great Wall of China is visible from space."
 
 # Current events
-poetry run fact-checker check "Electric vehicles produce zero emissions."
+poetry run python -m fact_checker_bugs.cli check "Electric vehicles produce zero emissions."
 
 # Conspiracy theories
-poetry run fact-checker check "The Moon landing was faked."
+poetry run python -m fact_checker_bugs.cli check "The Moon landing was faked."
 ```
 
 ---
@@ -226,24 +228,32 @@ After installing, restart your terminal.
 ## 📁 Project Structure
 
 ```
-fact_checker_project/
-├── .env                      # Your secrets (never commit this!)
+fact_checker_bugs/
+├── .env                      # Local secrets (never commit this)
 ├── .env.example              # Template for required environment variables
+├── .gitignore                # Git exclusions
 ├── pyproject.toml            # Project metadata and dependencies
 ├── poetry.lock               # Locked dependency versions
+├── README.md                 # Project documentation
 │
 ├── src/
-│   └── fact_checker/
-│       ├── cli.py            # CLI entry point (`fact-checker check`)
-│       ├── graph.py          # LangGraph agent pipeline
-│       ├── state.py          # Shared data schema
-│       └── nodes/
-│           ├── query_formulator.py  # Generates search queries (LLM)
-│           ├── retriever.py         # Searches the web (Tavily)
-│           ├── cross_referencer.py  # Deduplicates results
-│           └── scorer.py            # Scores the claim (LLM)
+│   └── fact_checker_bugs/
+│       ├── __init__.py
+│       ├── cli.py            # CLI entry point for claim checking
+│       ├── graph.py          # LangGraph orchestration flow
+│       ├── state.py          # Shared state schema for agent steps
+│       ├── nodes/
+│       │   ├── __init__.py
+│       │   ├── cross_referencer.py   # Combines and deduplicates evidence
+│       │   ├── query_formulator.py   # Builds search prompts/queries
+│       │   ├── retriever.py          # Web lookup / search integration
+│       │   └── scorer.py             # Final credibility scoring logic
+│       └── utils/
+│           ├── __init__.py
+│           └── llm_utils.py   # Shared LLM helper utilities
 │
-└── tests/                    # Test suite
+└── tests/
+    └── __init__.py          # Test package marker
 ```
 
 ---
