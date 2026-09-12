@@ -1,0 +1,26 @@
+#Environments
+.env
+.venv
+env/
+venv/
+
+#Python Cache
+__pycache__/
+*.pyc 
+*.pyo 
+*.pyd
+.Python 
+
+# LangGraph & IDEs
+.langgraph_checkpoints/
+.vscode/
+.idea/
+
+# Antigravity IDE & Agent State
+.antigravity/
+.antigravity-ide/
+.agent/
+
+# Local-only documentation (not for the repo)
+ARCHITECTURE.md.pytest_cache/
+/ARCHITECTURE.md

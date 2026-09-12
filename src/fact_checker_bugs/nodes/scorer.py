@@ -1,0 +1,92 @@
+import time as _time
+from itertools import cycle
+
+from pydantic import BaseModel, Field
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+from fact_checker_bugs.state import AgentState
+from fact_checker_bugs.utils.llm_utils import get_all_keys, invoke_with_backoff
+
+
+class EvaluationResult(BaseModel):
+    score: int = Field(
+        description=(
+            "Credibility score from 0 "
+            "(completely false) to 100 (verified true)."
+        )
+    )
+
+    justification: str = Field(
+        description=(
+            "Detailed explanation citing evidence, "
+            "contradictions, or lack of credible sources."
+        )
+    )
+
+
+def score_claim_node(state: AgentState) -> dict:
+    start = _time.time()
+    key_cycle = cycle(get_all_keys())
+
+    def build_llm():
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-3.5-flash-lite",
+            temperature=0.0,
+            api_key=next(key_cycle),
+        )
+
+        return llm.with_structured_output(EvaluationResult)
+
+    claim = state["claim"]
+    sources = state.get("sources", [])
+
+
+    # Retrieved web content is inserted directly into the prompt.
+    #
+    # There is no strong separation between trusted instructions
+    # and untrusted external evidence.
+    #
+    # A malicious source can therefore contain instruction-like
+    # text that attempts to manipulate the scorer.
+    formatted_evidence = "\n\n".join(
+        [
+            f"- Title: {source.get('title')}\n"
+            f"  URL: {source.get('url')}\n"
+            f"  Content: {source.get('snippet')}"
+            for source in sources
+        ]
+    )
+
+    prompt = f"""
+    You are an objective fact-checking engine.
+
+    Evaluate the accuracy of the claim based strictly on the
+    provided evidence.
+
+    Claim:
+    {claim}
+
+    Evidence:
+    {formatted_evidence if formatted_evidence else "No external evidence found."}
+
+    Instructions:
+    1. Check for direct corroboration or explicit contradiction.
+    2. Assess the reliability of the sources and context.
+    3. Assign an integer score from 0 to 100.
+    4. Provide a clear justification.
+    """
+
+    result: EvaluationResult = invoke_with_backoff(
+        build_llm,
+        prompt,
+    )
+
+    print(
+        f"[timing] scorer took "
+        f"{_time.time() - start:.1f}s"
+    )
+
+    return {
+        "score": result.score,
+        "justification": result.justification,
+    }

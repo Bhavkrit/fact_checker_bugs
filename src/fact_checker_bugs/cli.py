@@ -1,0 +1,63 @@
+import typer
+from rich.console import Console
+from rich.panel import Panel
+from rich.markdown import Markdown
+from rich.table import Table
+from dotenv import load_dotenv
+
+# Load environment variables FIRST so Gemini can authenticate
+load_dotenv()
+
+# Initialize Typer and Rich
+app = typer.Typer(help="Agentic AI Fact-Checking CLI")
+console = Console()
+
+@app.callback()
+def main():
+    """
+    Agentic AI Fact-Checking CLI powered by LangGraph and Gemini.
+    """
+    pass
+
+@app.command()
+def check(claim: str = typer.Argument(..., help="The claim to fact-check")):
+    """
+    Executes the LangGraph agent to verify a claim.
+    """
+    # Import graph lazily so LLM clients aren't created until a command runs
+    from fact_checker_bugs.graph import app as graph_app
+
+    console.print(Panel(f"[bold cyan]Evaluating:[/bold cyan] {claim}"))
+
+    initial_state = {
+        "claim": claim,
+        "loop_count": 0,
+        "sources": [],
+        "queries": []
+    }
+
+    try:
+        with console.status("[bold green]Agent is researching live data...", spinner="dots"):
+            final_state = graph_app.invoke(initial_state)
+    except Exception as e:
+        console.print(f"[bold red]Agent failed:[/bold red] {e}")
+        console.print("[yellow]This may be a rate limit (429) from the Gemini API. Try again in a minute, or check your API key quotas.[/yellow]")
+        raise typer.Exit(code=1)
+
+    score = final_state.get("score", 0)
+    color = "green" if score > 70 else "yellow" if score >= 40 else "red"
+
+    console.print(f"\n[bold {color}]Credibility Score: {score}/100[/bold {color}]")
+    console.print(Panel(Markdown(final_state.get("justification", "")), title="Justification"))
+
+    sources = final_state.get("sources", [])
+    if sources:
+        table = Table(title="Sources Consulted")
+        table.add_column("Title", style="cyan", no_wrap=True)
+        table.add_column("URL", style="magenta")
+        for src in sources:
+            table.add_row(src.get("title", "Unknown"), src.get("url", "N/A"))
+        console.print(table)
+
+if __name__ == "__main__":
+    app()

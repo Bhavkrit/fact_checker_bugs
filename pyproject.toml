@@ -1,0 +1,36 @@
+[project]
+name = "fact-checker-project"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Bhavkrit",email = "budhirajabhavkrit13@gmail.com"}
+]
+requires-python = ">=3.14,<4.0.0"
+dependencies = [
+    "langchain (>=1.3.17,<2.0.0)",
+    "langgraph (>=1.2.11,<2.0.0)",
+    "langchain-google-genai (>=4.3.5,<5.0.0)",
+    "pydantic (>=2.13.4,<3.0.0)",
+    "typer (>=0.27.1,<0.28.0)",
+    "rich (>=15.0.0,<16.0.0)",
+    "python-dotenv (>=1.2.3,<2.0.0)",
+    "langchain-groq (>=1.1.3,<2.0.0)",
+    "langchain-community (>=0.4.2,<0.5.0)",
+    "ddgs (>=9.16.0,<10.0.0)",
+    "tavily-python (>=0.8.1,<0.9.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.1.1,<10.0.0)"
+]
+
+[tool.poetry]
+packages = [
+    { include = "fact_checker", from = "src" }
+]

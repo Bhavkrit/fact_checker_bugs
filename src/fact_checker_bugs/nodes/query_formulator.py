@@ -1,0 +1,79 @@
+import time as _time
+from itertools import cycle
+from pydantic import BaseModel, Field
+from typing import List
+
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+from fact_checker_bugs.state import AgentState
+from fact_checker_bugs.utils.llm_utils import get_all_keys, invoke_with_backoff
+
+
+class SearchQueries(BaseModel):
+    queries: List[str] = Field(
+        description="Exactly 1 comprehensive search query to verify the claim."
+    )
+
+
+def formulate_queries_node(state: AgentState) -> dict:
+    start = _time.time()
+    key_cycle = cycle(get_all_keys())
+
+    def build_llm():
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-3.5-flash-lite",
+            temperature=0.0,
+            api_key=next(key_cycle),
+        )
+        return llm.with_structured_output(SearchQueries)
+
+    claim = state["claim"]
+    sources = state.get("sources", [])
+
+
+    # Every time the research loop runs, the complete source snippets
+    # gathered so far are inserted into the formulator prompt.
+    #
+    # This causes the prompt to grow as more sources are collected.
+    accumulated_evidence = "\n\n".join(
+        [
+            f"Title: {source.get('title', 'Unknown')}\n"
+            f"URL: {source.get('url', 'N/A')}\n"
+            f"Content: {source.get('snippet', '')}"
+            for source in sources
+        ]
+    )
+
+    prompt = f"""
+    Analyze the following claim and generate exactly ONE highly-targeted
+    Google search query designed to check its factual accuracy.
+
+    Ensure this single query is broad enough to capture both verifying
+    evidence and potential counter-evidence.
+
+    Claim:
+    {claim}
+
+    Previous research evidence:
+    {accumulated_evidence if accumulated_evidence else "No previous research evidence."}
+
+    Use the previous research to decide what additional evidence should
+    be searched for.
+    """
+
+    result: SearchQueries = invoke_with_backoff(build_llm, prompt)
+
+    print(
+        f"[formulator] prompt characters: {len(prompt)}"
+    )
+
+    print(
+        f"[timing] formulator took "
+        f"{_time.time() - start:.1f}s"
+    )
+
+    return {
+        "queries": [result.queries[0]]
+        if result.queries
+        else [claim]
+    }
