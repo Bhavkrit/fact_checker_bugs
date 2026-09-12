@@ -1,36 +1,72 @@
 # 🔍 Fact Checker — Agentic AI Fact-Checking CLI
 
-An agentic AI pipeline that takes any plain-text claim, autonomously searches the web for evidence, and returns a **credibility score (0–100)** with a detailed justification — powered by **LangGraph**, **Google Gemini**, and **Tavily Search**.
+An agentic AI pipeline that takes a plain-text claim, searches for evidence, and returns a credibility score from 0–100 with a justification.
+
+---
+
+## 🐛 Challenge Issues
+
+This repository contains six issues that participants are expected to investigate and resolve.
+
+### Recommended solve order
+
+**Issue 1 → Issue 2 → Issue 3 → Issue 4 → Issue 5 → Issue 6**
+
+### Issue 1 — Some valid search results are being lost
+
+Some search results are dropped when optional metadata is missing. The application should keep usable results even if some fields are absent.
+
+### Issue 2 — Duplicate evidence is being counted
+
+The same source can appear multiple times when its URL differs only by tracking parameters or minor variations.
+
+### Issue 3 — Research evidence disappears between rounds
+
+Sources collected in earlier rounds must remain available as new rounds add more evidence.
+
+### Issue 4 — Research prompts grow unnecessarily
+
+Previous evidence is appended in a way that makes prompts repeatedly larger without adding value.
+
+### Issue 5 — Retrieved content can influence model instructions
+
+Web content should remain evidence, not be treated as trusted instructions to the model.
+
+### Issue 6 — Research does not reliably terminate
+
+The research loop should stop after the intended limit instead of continuing unnecessarily.
 
 ---
 
 ## ✨ What it does
 
-```
-$ poetry run fact-checker check "The Great Wall of China is visible from space."
+```text
+$ poetry run python -m fact_checker_bugs.cli check "The Great Wall of China is visible from space."
 
 ╭──────────────────────────────────────────────────────────────╮
 │ Evaluating: The Great Wall of China is visible from space.   │
 ╰──────────────────────────────────────────────────────────────╯
+
 ⠙ Agent is researching live data...
 
 🟡 Credibility Score: 35/100
 
 ╭─ Justification ───────────────────────────────────────────────╮
-│ Multiple scientific sources, including NASA astronaut reports  │
+│ Multiple scientific sources, including NASA astronaut reports │
 │ and optical physics analysis, confirm that the wall is far too │
 │ narrow (~10 m) to be seen by the naked eye from low Earth      │
 │ orbit (~400 km). This is a well-documented myth...            │
 ╰───────────────────────────────────────────────────────────────╯
 
                Sources Consulted
+
 ┌──────────────────────────┬──────────────────────────────┐
 │ Title                    │ URL                          │
 ├──────────────────────────┼──────────────────────────────┤
 │ NASA Earth Observatory   │ https://earthobservatory...  │
 │ Scientific American      │ https://scientificamerican.. │
 └──────────────────────────┴──────────────────────────────┘
-```
+````
 
 ---
 
@@ -38,25 +74,23 @@ $ poetry run fact-checker check "The Great Wall of China is visible from space."
 
 Before setting up the project, make sure you have the following installed:
 
-| Tool | Version | Download |
-|------|---------|----------|
-| **Python** | `>= 3.14` | [python.org](https://www.python.org/downloads/) |
-| **Poetry** | `>= 2.0.0` | [python-poetry.org](https://python-poetry.org/docs/#installation) |
-| **Git** | Any recent version | [git-scm.com](https://git-scm.com/downloads) |
+| Tool   | Version            | Download                                                                                     |
+| ------ | ------------------ | -------------------------------------------------------------------------------------------- |
+| Python | >= 3.14            | [https://www.python.org/downloads/](https://www.python.org/downloads/)                       |
+| Poetry | >= 2.0.0           | [https://python-poetry.org/docs/#installation](https://python-poetry.org/docs/#installation) |
+| Git    | Any recent version | [https://git-scm.com/downloads](https://git-scm.com/downloads)                               |
 
 ### Verify your installations
 
 ```bash
-python --version      # Should print Python 3.14.x or higher
-poetry --version      # Should print Poetry 2.x.x
-git --version         # Should print git version x.x.x
+python --version
+poetry --version
+git --version
 ```
 
 ---
 
 ## 🚀 Setup Instructions
-
-Follow these steps **in order** to get the project running on your machine.
 
 ### Step 1 — Clone the repository
 
@@ -65,117 +99,88 @@ git clone <repository-url>
 cd fact_checker_bugs
 ```
 
-> Replace `<repository-url>` with the actual GitHub URL shared with you.
-
----
-
 ### Step 2 — Install dependencies
-
-Poetry automatically creates a virtual environment and installs all locked dependencies:
 
 ```bash
 poetry install
 ```
 
-You should see output like:
-```
-Creating virtualenv fact-checker-project-... in ...
-Installing dependencies from lock file
-...
-Installing the current project: fact-checker-project (0.1.0)
-```
+### Step 3 — Configure environment variables
 
----
-
-### Step 3 — Get your API Keys
-
-You need **two** sets of API keys:
-
-#### 🔑 Google Gemini API Key (Required — get at least 1, up to 4)
-
-1. Go to [Google AI Studio](https://aistudio.google.com/)
-2. Sign in with your Google account
-3. Click **"Get API Key"** → **"Create API key"**
-4. Copy the key (it looks like `AIzaSy...`)
-
-> 💡 **Pro tip:** Create 2–3 keys from different Google accounts to avoid hitting the free-tier rate limit (60 requests/minute per key).
-
-#### 🔑 Tavily API Key (Required — 1 key is enough)
-
-1. Go to [app.tavily.com](https://app.tavily.com/)
-2. Sign up for a free account
-3. Your API key is on the dashboard (it looks like `tvly-...`)
-
-> The free tier gives you **1,000 searches/month** — more than enough for testing.
-
----
-
-### Step 4 — Configure environment variables
-
-Copy the example `.env` file:
+Copy the example file:
 
 ```bash
-# On macOS / Linux
 cp .env.example .env
+```
 
-# On Windows (PowerShell)
+On Windows PowerShell:
+
+```powershell
 Copy-Item .env.example .env
 ```
 
-Now open `.env` in any text editor and fill in your keys:
+Fill in your keys in `.env`:
 
 ```dotenv
-# ── Google Gemini API Keys (at least GEMINI_API_KEY_1 is required) ──
-GEMINI_API_KEY_1=AIzaSy_your_first_key_here
-GEMINI_API_KEY_2=AIzaSy_your_second_key_here    # optional but recommended
-GEMINI_API_KEY_3=AIzaSy_your_third_key_here     # optional
-
-# ── Tavily Search API Key (required) ──
-TAVILY_API_KEY=tvly-your_tavily_key_here
-
-# ── Optional: LangSmith tracing (for debugging) ──
-# LANGCHAIN_TRACING_V2=true
-# LANGCHAIN_API_KEY=your_langsmith_key_here
-# LANGCHAIN_PROJECT=fact_checker_project
+GEMINI_API_KEY_1=your_key_here
+GEMINI_API_KEY_2=optional_second_key
+TAVILY_API_KEY=your_tavily_key
 ```
 
-> ⚠️ **Never commit `.env` to Git.** It is already listed in `.gitignore`.
+> Do not commit `.env` to version control.
 
----
-
-### Step 5 — Run the fact-checker
-
-This project does not currently expose a `fact-checker` console script in `pyproject.toml`, so the CLI is run directly as a Python module from the project root:
+### Step 4 — Run the CLI
 
 ```bash
 poetry run python -m fact_checker_bugs.cli check "Your claim goes here"
 ```
 
-#### Examples to try
+Example:
 
 ```bash
-# Science claims
-poetry run python -m fact_checker_bugs.cli check "Humans only use 10% of their brain."
-
-# Historical claims
-poetry run python -m fact_checker_bugs.cli check "The Great Wall of China is visible from space."
-
-# Current events
-poetry run python -m fact_checker_bugs.cli check "Electric vehicles produce zero emissions."
-
-# Conspiracy theories
-poetry run python -m fact_checker_bugs.cli check "The Moon landing was faked."
+poetry run python -m fact_checker_bugs.cli check "The James Webb Space Telescope was launched in 2021."
 ```
 
 ---
 
-## 🎯 Understanding the Output
+## 📋 Challenge Guidelines
 
-| Score Range | Colour | Meaning |
-|-------------|--------|---------|
-| **71 – 100** | 🟢 Green | Claim is well-supported by evidence |
-| **40 – 70** | 🟡 Yellow | Evidence is mixed or inconclusive |
-| **0 – 39** | 🔴 Red | Claim is contradicted by evidence or unsupported |
+* Solve the issues in the recommended order where possible.
+* Fix the underlying issue rather than applying a workaround for a specific input.
+* Do not remove or bypass existing functionality.
+* Keep changes focused on the reported issue.
+* Add regression tests where appropriate.
+* Do not commit API keys or other sensitive information.
+
+---
+
+## 📁 Project Structure
+
+```text
+fact_checker_bugs/
+├── .env.example
+├── .gitignore
+├── pyproject.toml
+├── poetry.lock
+├── README.md
+├── src/
+│   └── fact_checker_bugs/
+│       ├── __init__.py
+│       ├── cli.py
+│       ├── graph.py
+│       ├── state.py
+│       ├── nodes/
+│       │   ├── __init__.py
+│       │   ├── cross_referencer.py
+│       │   ├── query_formulator.py
+│       │   ├── retriever.py
+│       │   └── scorer.py
+│       └── utils/
+│           ├── __init__.py
+│           └── llm_utils.py
+└── tests/
+    └── __init__.py
+```
 
 ---
 
@@ -183,88 +188,23 @@ poetry run python -m fact_checker_bugs.cli check "The Moon landing was faked."
 
 ### `No Gemini API keys found in environment`
 
-Your `.env` file is either missing or the keys have typos. Double-check:
-```bash
-# Make sure .env exists
-ls -la .env        # macOS/Linux
-dir .env           # Windows
+Check that your `.env` file exists and contains valid keys.
 
-# Preview the file (make sure keys are filled in, not placeholder text)
-cat .env           # macOS/Linux
-type .env          # Windows
-```
+### `429 Too Many Requests`
 
-### `429 Too Many Requests` (rate limit error)
-
-The free-tier Gemini API has a rate limit of 60 requests per minute per key. Solutions:
-- **Wait 1 minute** and try again.
-- Add 2–3 Gemini API keys (`GEMINI_API_KEY_2`, `GEMINI_API_KEY_3`) — the agent rotates between them automatically.
+Wait a minute and try again, or add more Gemini keys to rotate between them.
 
 ### `Tavily search failed`
 
-- Check that `TAVILY_API_KEY` is set correctly in `.env`.
-- Verify your Tavily account has remaining search credits at [app.tavily.com](https://app.tavily.com/).
-
-### `python --version` shows Python < 3.14
-
-This project requires Python 3.14 or higher. Download the latest version from [python.org](https://www.python.org/downloads/) and re-run `poetry install`.
-
-### Poetry command not found
-
-Install Poetry by following the [official instructions](https://python-poetry.org/docs/#installation):
-
-```bash
-# macOS / Linux / WSL
-curl -sSL https://install.python-poetry.org | python3 -
-
-# Windows (PowerShell)
-(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
-```
-
-After installing, restart your terminal.
-
----
-
-## 📁 Project Structure
-
-```
-fact_checker_bugs/
-├── .env                      # Local secrets (never commit this)
-├── .env.example              # Template for required environment variables
-├── .gitignore                # Git exclusions
-├── pyproject.toml            # Project metadata and dependencies
-├── poetry.lock               # Locked dependency versions
-├── README.md                 # Project documentation
-│
-├── src/
-│   └── fact_checker_bugs/
-│       ├── __init__.py
-│       ├── cli.py            # CLI entry point for claim checking
-│       ├── graph.py          # LangGraph orchestration flow
-│       ├── state.py          # Shared state schema for agent steps
-│       ├── nodes/
-│       │   ├── __init__.py
-│       │   ├── cross_referencer.py   # Combines and deduplicates evidence
-│       │   ├── query_formulator.py   # Builds search prompts/queries
-│       │   ├── retriever.py          # Web lookup / search integration
-│       │   └── scorer.py             # Final credibility scoring logic
-│       └── utils/
-│           ├── __init__.py
-│           └── llm_utils.py   # Shared LLM helper utilities
-│
-└── tests/
-    └── __init__.py          # Test package marker
-```
+Verify that `TAVILY_API_KEY` is set correctly in `.env`.
 
 ---
 
 ## 🧰 Tech Stack
 
-| Component | Technology |
-|-----------|-----------|
-| Agent Framework | [LangGraph](https://github.com/langchain-ai/langgraph) |
-| LLM | [Google Gemini](https://aistudio.google.com/) via LangChain |
-| Web Search | [Tavily Search API](https://tavily.com/) |
-| CLI | [Typer](https://typer.tiangolo.com/) |
-| Terminal UI | [Rich](https://rich.readthedocs.io/) |
-| Package Manager | [Poetry](https://python-poetry.org/) |
+* LangGraph
+* Google Gemini
+* Tavily Search
+* Typer
+* Rich
+* Poetry
