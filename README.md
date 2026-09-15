@@ -2,7 +2,16 @@
 
 An agentic AI pipeline that takes a plain-text claim, searches for evidence, and returns a credibility score from 0–100 with a justification.
 
----
+## 🧭 Order of solving bugs
+
+This is the preferred order to solve the issues, as it keeps the fixes incremental and easier to validate step by step.
+
+1. Issue 1
+2. Issue 2
+3. Issue 3
+4. Issue 4
+5. Issue 5
+6. Issue 6
 
 ---
 
