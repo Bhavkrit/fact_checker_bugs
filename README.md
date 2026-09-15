@@ -4,38 +4,6 @@ An agentic AI pipeline that takes a plain-text claim, searches for evidence, and
 
 ---
 
-## 🐛 Challenge Issues
-
-This repository contains six issues that participants are expected to investigate and resolve.
-
-### Recommended solve order
-
-**Issue 1 → Issue 2 → Issue 3 → Issue 4 → Issue 5 → Issue 6**
-
-### Issue 1 — Some valid search results are being lost
-
-Some search results are dropped when optional metadata is missing. The application should keep usable results even if some fields are absent.
-
-### Issue 2 — Duplicate evidence is being counted
-
-The same source can appear multiple times when its URL differs only by tracking parameters or minor variations.
-
-### Issue 3 — Research evidence disappears between rounds
-
-Sources collected in earlier rounds must remain available as new rounds add more evidence.
-
-### Issue 4 — Research prompts grow unnecessarily
-
-Previous evidence is appended in a way that makes prompts repeatedly larger without adding value.
-
-### Issue 5 — Retrieved content can influence model instructions
-
-Web content should remain evidence, not be treated as trusted instructions to the model.
-
-### Issue 6 — Research does not reliably terminate
-
-The research loop should stop after the intended limit instead of continuing unnecessarily.
-
 ---
 
 ## ✨ What it does
@@ -140,17 +108,6 @@ Example:
 ```bash
 poetry run python -m fact_checker_bugs.cli check "The James Webb Space Telescope was launched in 2021."
 ```
-
----
-
-## 📋 Challenge Guidelines
-
-* Solve the issues in the recommended order where possible.
-* Fix the underlying issue rather than applying a workaround for a specific input.
-* Do not remove or bypass existing functionality.
-* Keep changes focused on the reported issue.
-* Add regression tests where appropriate.
-* Do not commit API keys or other sensitive information.
 
 ---
 
